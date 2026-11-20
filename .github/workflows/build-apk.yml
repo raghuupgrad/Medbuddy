@@ -1,4 +1,4 @@
-name: Build MedBuddy Full-Screen APK
+name: Build MedBuddy APK - New Icon
 
 on:
   workflow_dispatch:
@@ -34,13 +34,13 @@ jobs:
         with:
           gradle-version: '8.9'
 
-      - name: Extract fixed MedBuddy ZIP
+      - name: Extract MedBuddy ZIP
         run: |
-          ZIP_FILE="MedBuddy_FULLSCREEN_UI_FIXED.zip"
+          ZIP_FILE="MedBuddy_REMINDER_UX_WITH_ICON.zip"
 
           if [ ! -f "$ZIP_FILE" ]; then
             echo "ERROR: ZIP file not found!"
-            find . -maxdepth 3 -type f
+            ls -la
             exit 1
           fi
 
@@ -60,9 +60,9 @@ jobs:
           fi
 
           echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
-          echo "Found: $PROJECT_DIR"
+          echo "Found project: $PROJECT_DIR"
 
-      - name: Build debug APK
+      - name: Build MedBuddy APK
         run: |
           cd "$PROJECT_DIR"
           gradle --no-daemon clean assembleDebug
@@ -73,16 +73,16 @@ jobs:
             -path '*/build/outputs/apk/debug/*.apk' | head -n 1)
 
           if [ -z "$APK" ]; then
-            echo "APK not generated!"
+            echo "ERROR: APK not generated!"
             exit 1
           fi
 
-          cp "$APK" "$GITHUB_WORKSPACE/MedBuddy-FullScreen.apk"
+          cp "$APK" "$GITHUB_WORKSPACE/MedBuddy.apk"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: MedBuddy-FullScreen-APK
-          path: MedBuddy-FullScreen.apk
+          name: MedBuddy-New-Icon-APK
+          path: MedBuddy.apk
           if-no-files-found: error
           retention-days: 30
