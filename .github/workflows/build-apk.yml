@@ -1,4 +1,4 @@
-name: Build MedBuddy Voice-Only APK
+name: Build MedBuddy APK
 
 on:
   workflow_dispatch:
@@ -39,16 +39,43 @@ jobs:
           test -f MedBuddy_VOICE_ONLY.zip
           mkdir -p MedBuddyProject
           unzip -o MedBuddy_VOICE_ONLY.zip -d MedBuddyProject
-          cp -a MedBuddyProject/. .
 
-      - name: Build APK
+      - name: Locate Gradle project
         run: |
+          PROJECT_DIR=$(find "$GITHUB_WORKSPACE/MedBuddyProject" \
+            -type f \( -name settings.gradle -o -name settings.gradle.kts \) \
+            -printf '%h\n' | head -n 1)
+
+          if [ -z "$PROJECT_DIR" ]; then
+            echo "ERROR: Gradle settings file not found."
+            find MedBuddyProject -maxdepth 4 -type f
+            exit 1
+          fi
+
+          echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
+          echo "Found project: $PROJECT_DIR"
+
+      - name: Build MedBuddy APK
+        run: |
+          cd "$PROJECT_DIR"
           gradle --no-daemon clean assembleDebug
+
+      - name: Prepare APK
+        run: |
+          APK=$(find "$PROJECT_DIR" -path '*/build/outputs/apk/debug/*.apk' \
+            -type f | head -n 1)
+
+          if [ -z "$APK" ]; then
+            echo "APK not found"
+            exit 1
+          fi
+
+          cp "$APK" "$GITHUB_WORKSPACE/MedBuddy.apk"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: MedBuddy-APK
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: MedBuddy.apk
           if-no-files-found: error
           retention-days: 30
