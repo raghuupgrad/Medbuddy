@@ -23,54 +23,51 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Locate Android SDK
-        shell: bash
+      # Correct Android SDK installation
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          packages: 'platform-tools'
+          accept-android-sdk-licenses: true
+
+      # Install required Android API and build tools
+      - name: Install Android Packages
         run: |
-          echo "ANDROID_HOME=${ANDROID_HOME:-/usr/local/lib/android/sdk}" >> $GITHUB_ENV
-          echo "ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}" >> $GITHUB_ENV
+          sdkmanager "platforms;android-35" "build-tools;35.0.0"
 
-      - name: Find and Install Android SDK Packages
-        shell: bash
+      # Extract the uploaded project ZIP
+      - name: Extract MedBuddy Project
         run: |
-          set -e
-
-          SDKMANAGER=$(find \
-            /usr/local/lib/android/sdk \
-            /opt/android-sdk \
-            "$ANDROID_HOME" \
-            -type f -name sdkmanager 2>/dev/null | head -n 1)
-
-          if [ -z "$SDKMANAGER" ]; then
-            echo "ERROR: sdkmanager was not found."
-            echo "Searching available Android SDK directories:"
-            ls -la /usr/local/lib/android/ || true
+          if [ ! -f MedBuddy_Native_Android_With_Permissions.zip ]; then
+            echo "ERROR: MedBuddy ZIP file not found in repository root."
             exit 1
           fi
 
-          echo "Found sdkmanager: $SDKMANAGER"
-
-          yes | "$SDKMANAGER" --licenses || true
-
-          "$SDKMANAGER" \
-            "platform-tools" \
-            "platforms;android-35" \
-            "build-tools;35.0.0"
-
-      - name: Extract MedBuddy ZIP
-        run: |
           mkdir -p MedBuddyProject
-          unzip -o MedBuddy_Native_Android_With_Permissions.zip -d MedBuddyProject
+
+          unzip -o MedBuddy_Native_Android_With_Permissions.zip \
+            -d MedBuddyProject
+
           cp -a MedBuddyProject/. .
 
+          echo "MedBuddy project extracted successfully."
+
+          ls -la
+          ls -la app
+
+      # Install Gradle 8.9
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
 
-      - name: Build APK
-        run: gradle assembleDebug
+      # Build APK
+      - name: Build MedBuddy APK
+        run: |
+          gradle --no-daemon assembleDebug
 
-      - name: Upload APK
+      # Upload APK
+      - name: Upload MedBuddy APK
         uses: actions/upload-artifact@v4
         with:
           name: MedBuddy-Android-APK
