@@ -34,28 +34,55 @@ jobs:
         with:
           gradle-version: '8.9'
 
-      - name: Extract Full-Screen MedBuddy ZIP
+      - name: Extract fixed MedBuddy ZIP
         run: |
-          ZIP_FILE="MedBuddy_FULLSCREEN_UI.zip"
+          ZIP_FILE="MedBuddy_FULLSCREEN_UI_FIXED.zip"
 
           if [ ! -f "$ZIP_FILE" ]; then
-            echo "ERROR: MedBuddy_FULLSCREEN_UI.zip not found!"
-            ls -la
+            echo "ERROR: ZIP file not found!"
+            find . -maxdepth 3 -type f
             exit 1
           fi
 
           mkdir -p MedBuddyProject
           unzip -o "$ZIP_FILE" -d MedBuddyProject
 
-      - name: Build MedBuddy APK
+      - name: Locate Android project
         run: |
-          cd MedBuddyProject/MedBuddy_VOICE_ONLY_PROJECT
+          PROJECT_DIR=$(find "$GITHUB_WORKSPACE/MedBuddyProject" \
+            -type f \( -name settings.gradle -o -name settings.gradle.kts \) \
+            -printf '%h\n' | head -n 1)
+
+          if [ -z "$PROJECT_DIR" ]; then
+            echo "ERROR: Gradle project not found!"
+            find MedBuddyProject -maxdepth 6 -type f
+            exit 1
+          fi
+
+          echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
+          echo "Found: $PROJECT_DIR"
+
+      - name: Build debug APK
+        run: |
+          cd "$PROJECT_DIR"
           gradle --no-daemon clean assembleDebug
+
+      - name: Locate APK
+        run: |
+          APK=$(find "$PROJECT_DIR" -type f \
+            -path '*/build/outputs/apk/debug/*.apk' | head -n 1)
+
+          if [ -z "$APK" ]; then
+            echo "APK not generated!"
+            exit 1
+          fi
+
+          cp "$APK" "$GITHUB_WORKSPACE/MedBuddy-FullScreen.apk"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: MedBuddy-FullScreen-APK
-          path: MedBuddyProject/MedBuddy_VOICE_ONLY_PROJECT/app/build/outputs/apk/debug/app-debug.apk
+          path: MedBuddy-FullScreen.apk
           if-no-files-found: error
           retention-days: 30
