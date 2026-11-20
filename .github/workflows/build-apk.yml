@@ -34,37 +34,35 @@ jobs:
         with:
           gradle-version: '8.9'
 
-      - name: Extract MedBuddy ZIP
+      - name: Extract Sound-Fixed MedBuddy ZIP
         run: |
-          if [ ! -f MedBuddy_Previous_Design_Native.zip ]; then
-            echo "MedBuddy ZIP not found!"
+          ZIP_FILE="MedBuddy_Previous_Design_SOUND_FIXED.zip"
+
+          if [ ! -f "$ZIP_FILE" ]; then
+            echo "ERROR: $ZIP_FILE not found in repository root."
             exit 1
           fi
 
           mkdir -p MedBuddyProject
-
-          unzip -o MedBuddy_Previous_Design_Native.zip \
-            -d MedBuddyProject
-
+          unzip -o "$ZIP_FILE" -d MedBuddyProject
           cp -a MedBuddyProject/. .
 
-          echo "Project extracted successfully"
-
-      - name: Verify Project Files
+      - name: Verify Android Project
         run: |
           test -f settings.gradle
           test -f app/build.gradle
           test -f app/src/main/AndroidManifest.xml
-          test -f app/src/main/java/com/medbuddy/reminder/MainActivity.java
+          test -f app/src/main/java/com/medbuddy/reminder/AlarmActivity.java
+          test -f app/src/main/java/com/medbuddy/reminder/AlarmNotifications.java
 
       - name: Build MedBuddy APK
         run: |
-          gradle --no-daemon assembleDebug
+          gradle --no-daemon clean assembleDebug
 
       - name: Upload MedBuddy APK
         uses: actions/upload-artifact@v4
         with:
-          name: MedBuddy-Android-APK
+          name: MedBuddy-Sound-Fixed-APK
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 30
