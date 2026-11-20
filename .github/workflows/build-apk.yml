@@ -1,4 +1,4 @@
-name: Build MedBuddy - Notification and App Actions
+name: Build MedBuddy - Both Places Actions
 
 on:
   workflow_dispatch:
@@ -36,12 +36,11 @@ jobs:
 
       - name: Extract MedBuddy ZIP
         run: |
-          ZIP_FILE="MedBuddy_BOTH_PLACES_ACTIONS.zip"
+          ZIP_FILE="MedBuddy_BOTH_PLACES_ACTIONS_REPOFIX.zip"
 
           if [ ! -f "$ZIP_FILE" ]; then
             echo "ERROR: ZIP file not found!"
-            echo "Repository files:"
-            find . -maxdepth 3 -type f
+            ls -la
             exit 1
           fi
 
@@ -61,14 +60,14 @@ jobs:
           fi
 
           echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
-          echo "Found Android project: $PROJECT_DIR"
+          echo "Found project: $PROJECT_DIR"
 
       - name: Build MedBuddy APK
         run: |
           cd "$PROJECT_DIR"
-          gradle --no-daemon clean assembleDebug
+          gradle --no-daemon --refresh-dependencies clean assembleDebug
 
-      - name: Locate APK
+      - name: Find APK
         run: |
           APK=$(find "$PROJECT_DIR" -type f \
             -path '*/build/outputs/apk/debug/*.apk' | head -n 1)
@@ -80,7 +79,7 @@ jobs:
 
           cp "$APK" "$GITHUB_WORKSPACE/MedBuddy.apk"
 
-      - name: Upload APK
+      - name: Upload MedBuddy APK
         uses: actions/upload-artifact@v4
         with:
           name: MedBuddy-Both-Places-Actions-APK
