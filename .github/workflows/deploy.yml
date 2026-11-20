@@ -1,4 +1,4 @@
-name: Deploy MedBuddy to GitHub Pages
+name: Deploy MedBuddy
 
 on:
   push:
@@ -17,11 +17,11 @@ concurrency:
 
 jobs:
   deploy:
+    runs-on: ubuntu-latest
+
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-
-    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
@@ -34,8 +34,11 @@ jobs:
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
+        with:
+          enablement: true
+          token: ${{ secrets.PAGES_TOKEN }}
 
-      - name: Upload website files
+      - name: Upload website
         uses: actions/upload-pages-artifact@v3
         with:
           path: public
