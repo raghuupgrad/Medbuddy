@@ -40,33 +40,33 @@ jobs:
           mkdir -p MedBuddyProject
           unzip -o MedBuddy_VOICE_ONLY.zip -d MedBuddyProject
 
-      - name: Locate Gradle project
+      - name: Find Android project
         run: |
           PROJECT_DIR=$(find "$GITHUB_WORKSPACE/MedBuddyProject" \
             -type f \( -name settings.gradle -o -name settings.gradle.kts \) \
             -printf '%h\n' | head -n 1)
 
           if [ -z "$PROJECT_DIR" ]; then
-            echo "ERROR: Gradle settings file not found."
-            find MedBuddyProject -maxdepth 4 -type f
+            echo "Gradle project not found!"
+            find MedBuddyProject -maxdepth 5 -type f
             exit 1
           fi
 
           echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
           echo "Found project: $PROJECT_DIR"
 
-      - name: Build MedBuddy APK
+      - name: Build APK
         run: |
           cd "$PROJECT_DIR"
           gradle --no-daemon clean assembleDebug
 
-      - name: Prepare APK
+      - name: Find APK
         run: |
-          APK=$(find "$PROJECT_DIR" -path '*/build/outputs/apk/debug/*.apk' \
-            -type f | head -n 1)
+          APK=$(find "$PROJECT_DIR" \
+            -type f -name app-debug.apk | head -n 1)
 
           if [ -z "$APK" ]; then
-            echo "APK not found"
+            echo "APK file not found!"
             exit 1
           fi
 
