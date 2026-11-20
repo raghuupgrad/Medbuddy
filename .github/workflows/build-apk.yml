@@ -1,4 +1,4 @@
-name: Build MedBuddy APK - New Icon
+name: Build MedBuddy - Notification and App Actions
 
 on:
   workflow_dispatch:
@@ -36,11 +36,12 @@ jobs:
 
       - name: Extract MedBuddy ZIP
         run: |
-          ZIP_FILE="MedBuddy_REMINDER_UX_WITH_ICON.zip"
+          ZIP_FILE="MedBuddy_BOTH_PLACES_ACTIONS.zip"
 
           if [ ! -f "$ZIP_FILE" ]; then
             echo "ERROR: ZIP file not found!"
-            ls -la
+            echo "Repository files:"
+            find . -maxdepth 3 -type f
             exit 1
           fi
 
@@ -60,7 +61,7 @@ jobs:
           fi
 
           echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
-          echo "Found project: $PROJECT_DIR"
+          echo "Found Android project: $PROJECT_DIR"
 
       - name: Build MedBuddy APK
         run: |
@@ -82,7 +83,7 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: MedBuddy-New-Icon-APK
+          name: MedBuddy-Both-Places-Actions-APK
           path: MedBuddy.apk
           if-no-files-found: error
           retention-days: 30
