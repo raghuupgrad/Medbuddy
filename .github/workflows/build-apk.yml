@@ -17,57 +17,36 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup Java 17
+      - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
-      # Correct Android SDK installation
       - name: Setup Android SDK
         uses: android-actions/setup-android@v4
-        with:
-          packages: 'platform-tools'
-          accept-android-sdk-licenses: true
 
-      # Install required Android API and build tools
       - name: Install Android Packages
         run: |
-          sdkmanager "platforms;android-35" "build-tools;35.0.0"
+          sdkmanager --install \
+            "platforms;android-35" \
+            "build-tools;35.0.0"
 
-      # Extract the uploaded project ZIP
-      - name: Extract MedBuddy Project
+      - name: Extract MedBuddy ZIP
         run: |
-          if [ ! -f MedBuddy_Native_Android_With_Permissions.zip ]; then
-            echo "ERROR: MedBuddy ZIP file not found in repository root."
-            exit 1
-          fi
-
-          mkdir -p MedBuddyProject
-
-          unzip -o MedBuddy_Native_Android_With_Permissions.zip \
-            -d MedBuddyProject
-
+          unzip -o MedBuddy_Native_Android_FIXED.zip -d MedBuddyProject
           cp -a MedBuddyProject/. .
 
-          echo "MedBuddy project extracted successfully."
-
-          ls -la
-          ls -la app
-
-      # Install Gradle 8.9
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
 
-      # Build APK
-      - name: Build MedBuddy APK
+      - name: Build Android APK
         run: |
           gradle --no-daemon assembleDebug
 
-      # Upload APK
-      - name: Upload MedBuddy APK
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: MedBuddy-Android-APK
